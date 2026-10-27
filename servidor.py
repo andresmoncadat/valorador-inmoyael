@@ -15,6 +15,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CAT = "https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/"
 UA = {"User-Agent": "InmoYael-Valorador-Demo/1.0 (prueba interna)"}
 
+# €/m² de venta (vivienda usada) por municipio — ORIENTATIVO, aproximado de datos públicos.
+# En producción se sustituye por el dataset oficial del Ministerio de Vivienda / INE.
+ZONA_EUR_M2 = {
+    "MADRID": 4100, "ALCALA DE HENARES": 1950, "TORREJON DE ARDOZ": 2000, "COSLADA": 2050,
+    "SAN FERNANDO DE HENARES": 2100, "GETAFE": 2250, "LEGANES": 2150, "ALCORCON": 2350,
+    "MOSTOLES": 1950, "FUENLABRADA": 1850, "PARLA": 1650, "ALCOBENDAS": 3300,
+    "SAN SEBASTIAN DE LOS REYES": 2650, "POZUELO DE ALARCON": 3900, "LAS ROZAS DE MADRID": 3100,
+    "MAJADAHONDA": 3300, "RIVAS-VACIAMADRID": 2450, "ARGANDA DEL REY": 1700, "PINTO": 2000,
+    "VALDEMORO": 1800, "COLLADO VILLALBA": 2000, "TRES CANTOS": 2900, "BOADILLA DEL MONTE": 3100,
+    "ARANJUEZ": 1500, "GUADALAJARA": 1500, "BARCELONA": 4300, "VALENCIA": 2300, "SEVILLA": 2200,
+    "MALAGA": 2800, "ZARAGOZA": 2000, "BILBAO": 3000, "MURCIA": 1400, "ALICANTE": 2000,
+}
+ZONA_DEFAULT = 1700
+
+def eurm2_zona(muni):
+    return ZONA_EUR_M2.get((muni or "").strip().upper(), ZONA_DEFAULT)
+
 def fetch(url):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=25) as r:
@@ -99,6 +116,7 @@ def consulta_catastro(p):
         "anio": first("ant", dnp),
         "lat": lat, "lon": lon, "ldt": ldt,
         "nunidades": nunidades,
+        "eur_m2_zona": eurm2_zona(nm or muni),
         "fuente": "Sede Electrónica del Catastro (datos no protegidos)",
     }
 

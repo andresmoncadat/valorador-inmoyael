@@ -262,7 +262,7 @@ body.editing .edit-banner{display:block}
         <div class="field c4"><label for="f-via">Nombre de la vía *</label><input id="f-via" type="text" value="SANTORCAZ"></div>
         <div class="field c3"><label for="f-num">Número *</label><input id="f-num" type="text" value="2"></div>
         <div class="field c3"><label for="f-prov">Provincia</label><input id="f-prov" type="text" value="MADRID"></div>
-        <div class="field c6"><label for="f-eurm2">€/m² de referencia de la zona</label><input id="f-eurm2" type="number" value="1950"><span class="fh">Ajustable. En producción vendría del dataset público del Ministerio.</span></div>
+        <div class="field c6"><label for="f-eurm2">€/m² de la zona (automático · ajustable)</label><input id="f-eurm2" type="number" placeholder="Se calcula solo según el municipio"><span class="fh">Lo deduce el sistema a partir del municipio. Solo rellénalo si quieres afinarlo.</span></div>
         <div class="field c4">
           <label for="f-tipo">Tipología</label>
           <select id="f-tipo">
@@ -452,7 +452,7 @@ function score(items,ideal){ if(!items||!items.length) return 6.0; return Math.r
 
 function assembleData(c, osm, i){
   const m2=parseInt(String(c.sup_construida).replace(/[^0-9]/g,''))||parseInt(i.m2)||0;
-  const em2=i.eurm2||0, muni=c.municipio||i.municipio||'';
+  const em2=i.eurm2||Number(c.eur_m2_zona)||1700, muni=c.municipio||i.municipio||'';
   const transporte=[...pick(osm,x=>x.tags.railway==='station'||x.tags.station==='subway',2),...pick(osm,x=>x.tags.highway==='bus_stop',2)];
   const educacion=pick(osm,x=>x.tags.amenity==='school'||x.tags.amenity==='kindergarten',4);
   const comercio=pick(osm,x=>x.tags.shop==='supermarket'||x.tags.amenity==='pharmacy',4);
@@ -515,6 +515,8 @@ async function generate(){
     const qs=new URLSearchParams({provincia:i.provincia,municipio:i.municipio,sigla:i.sigla,calle:i.via,numero:i.numero});
     const c=await (await fetch('/api/catastro?'+qs)).json();
     if(c.error){ overlay(false); setMode('form'); showMsg('<b>'+esc(c.error)+'</b>'); return; }
+    i.eurm2 = i.eurm2 || Number(c.eur_m2_zona) || 1700;   // €/m² automático según municipio
+    $('#f-eurm2').value = i.eurm2;
     $('#ov-title').textContent='Buscando el entorno (OpenStreetMap)…';
     let osm=null; if(c.lat&&c.lon) osm=await overpass(parseFloat(c.lat),parseFloat(c.lon));
     const d=assembleData(c, osm, i);
