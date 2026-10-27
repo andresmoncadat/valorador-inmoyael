@@ -1,0 +1,1 @@
+# El valorador usa solo la librería estándar de Python (sin dependencias externas).
